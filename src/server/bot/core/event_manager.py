@@ -2,7 +2,7 @@ import os
 import datetime
 import asyncio
 from loguru import logger
-from ..utils.audio_utils import save_audio_file, anonymise_audio
+from ..utils.audio_utils import save_audio_file
 from ..processors.audio.analyzer import AudioAnalyzer
 
 
@@ -41,10 +41,7 @@ class EventHandlerManager:
             audios_dir = os.path.join(self.session_dir, "audios")
             os.makedirs(audios_dir, exist_ok=True)
             path = f"{audios_dir}/{datetime.datetime.now():%Y%m%d_%H%M%S_%f}_USER.wav"
-            # Anonymise before writing to disk so the saved file cannot be
-            # used to re-identify the child speaker.
-            anon_audio = await anonymise_audio(audio, sr, ch)
-            await save_audio_file(anon_audio, path, sr, ch)
+            await save_audio_file(audio, path, sr, ch)
 
         @audiobuffer.event_handler("on_bot_turn_audio_data")
         async def on_bot_audio(_, audio, sr, ch):

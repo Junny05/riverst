@@ -7,7 +7,6 @@ from pipecat.processors.filters.stt_mute_filter import (
 )
 from ..processors.video.processor import VideoProcessor
 from ..processors.video.buffer_processor import VideoBufferProcessor
-from ..processors.audio.anonymiser import AnonymiserProcessor
 
 
 class PipelineBuilder:
@@ -98,7 +97,6 @@ class PipelineBuilder:
         audiobuffer,
         metrics_logger,
         transport_params,
-        anonymiser: Optional[AnonymiserProcessor] = None,
     ) -> Pipeline:
         """Build complete pipeline with STT and TTS.
 
@@ -115,7 +113,6 @@ class PipelineBuilder:
             audiobuffer: Audio buffer processor
             metrics_logger: Metrics logging processor
             transport_params: Transport parameters
-            anonymiser: Optional voice anonymisation processor (inserted before STT)
 
         Returns:
             Pipeline: Configured pipeline instance
@@ -128,7 +125,6 @@ class PipelineBuilder:
             pipecat_transport.input(),
             rtvi,
             stt_mute_processor,  # Add the mute processor before STT
-            anonymiser,          # Voice anonymisation — before STT so STT sees clean speech
             stt,
             transcript.user(),
             context_aggregator.user(),
@@ -212,7 +208,6 @@ class PipelineBuilder:
         audiobuffer,
         metrics_logger,
         transport_params,
-        anonymiser: Optional[AnonymiserProcessor] = None,
     ) -> Pipeline:
         """Build appropriate pipeline based on available components.
 
@@ -229,7 +224,6 @@ class PipelineBuilder:
             audiobuffer: Audio buffer processor
             metrics_logger: Metrics logging processor
             transport_params: Transport parameters
-            anonymiser: Optional voice anonymisation processor
 
         Returns:
             Pipeline: Configured pipeline instance
@@ -248,7 +242,6 @@ class PipelineBuilder:
                 audiobuffer,
                 metrics_logger,
                 transport_params,
-                anonymiser=anonymiser,
             )
         else:
             return self.build_llm_only_pipeline(
