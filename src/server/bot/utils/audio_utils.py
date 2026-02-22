@@ -33,7 +33,7 @@ async def anonymise_audio(
     Returns:
         Anonymised audio as raw PCM bytes (same length as input).
     """
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(
         None,
         _mcadams_anonymise,
@@ -102,7 +102,7 @@ async def save_audio_file(
         return False
 
     # Check for silence in background thread
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     is_silent = await loop.run_in_executor(None, _is_silent, audio, silence_threshold)
 
     if is_silent:
