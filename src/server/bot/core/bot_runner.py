@@ -21,6 +21,7 @@ from pipecat.processors.filters.stt_mute_filter import (
 )
 
 from ..processors.audio.resampling_helper import AudioResamplingHelper
+from ..processors.audio.anonymiser import AnonymiserProcessor
 from ..transport.configuration_manager import TransportConfigurationManager
 from .pipeline_orchestrator import PipelineBuilder
 from .event_manager import EventHandlerManager
@@ -87,6 +88,19 @@ async def run_bot(
         # Setup audio buffer with resampling helper
         audiobuffer = AudioResamplingHelper.configure_audio_buffer_processor()
 
+        # Voice anonymisation processor — sits before STT in the pipeline so
+        # that both STT input and saved WAV files are anonymised.
+        # Controlled by ANONYMISE_AUDIO env-var (default: true).
+        def _str_to_bool(v: str) -> bool:
+            return str(v).strip().strip("\"'").lower() in {"1", "true", "yes", "on"}
+
+        anonymise_enabled = _str_to_bool(os.environ.get("ANONYMISE_AUDIO", "true"))
+        anonymiser = AnonymiserProcessor(
+            mcadams_coeff=float(os.environ.get("ANONYMISE_MCADAMS_COEFF", "0.8")),
+            lpc_order=int(os.environ.get("ANONYMISE_LPC_ORDER", "16")),
+            enabled=anonymise_enabled,
+        )
+
         video_buffer = VideoBufferProcessor(
             session_dir=session_dir,
             camera_out_width=config.get("video_out_width", 0),
@@ -133,6 +147,7 @@ async def run_bot(
             audiobuffer=audiobuffer,
             metrics_logger=metrics_logger,
             transport_params=transport_manager.create_transport_params(),
+            anonymiser=anonymiser,
         )
 
         task = PipelineTask(
