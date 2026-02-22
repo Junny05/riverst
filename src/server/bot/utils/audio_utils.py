@@ -8,6 +8,42 @@ import aiofiles
 import struct
 import math
 
+from ..processors.audio.anonymiser import _mcadams_anonymise
+
+
+async def anonymise_audio(
+    audio: bytes,
+    sample_rate: int,
+    num_channels: int,
+    mcadams_coeff: float = 0.8,
+    lpc_order: int = 16,
+) -> bytes:
+    """Apply McAdams voice anonymisation to raw PCM bytes (async wrapper).
+
+    Runs the CPU-bound anonymisation in an executor thread so it does not
+    block the event loop.
+
+    Args:
+        audio:          Raw 16-bit little-endian PCM bytes.
+        sample_rate:    Sample rate in Hz.
+        num_channels:   Number of audio channels.
+        mcadams_coeff:  LPC pole-angle exponent (default 0.8).
+        lpc_order:      LPC analysis order (default 16).
+
+    Returns:
+        Anonymised audio as raw PCM bytes (same length as input).
+    """
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        None,
+        _mcadams_anonymise,
+        audio,
+        sample_rate,
+        num_channels,
+        mcadams_coeff,
+        lpc_order,
+    )
+
 
 async def save_audio_file(
     audio: bytes,
